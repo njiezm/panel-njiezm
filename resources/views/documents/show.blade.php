@@ -90,23 +90,24 @@
                 </tr>
             </thead>
             <tbody>
-                @if(isset($document->metadata['items']) && count($document->metadata['items']) > 0)
-                    @foreach($document->metadata['items'] as $item)
-                    <tr>
-                        <td>{{ $item['description'] }}</td>
-                        <td class="text-right">{{ $item['quantity'] }}</td>
-                        <td class="text-right">{{ number_format($item['unit_price'], 2, ',', ' ') }} €</td>
-                        <td class="text-right">{{ $item['vat'] }}</td>
-                        <td class="text-right">{{ number_format($item['quantity'] * $item['unit_price'], 2, ',', ' ') }} €</td>
-                    </tr>
-                    @endforeach
-                @else
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px;">
-                            Aucun article n'a été ajouté à ce {{ $document->type == 'quote' ? 'devis' : 'facture' }}.
-                        </td>
-                    </tr>
-                @endif
+                @if($document->items->count() > 0)
+    @foreach($document->items as $item)
+        <tr>
+            <td>{{ $item->description }}</td>
+            <td class="text-right">{{ $item->quantity }}</td>
+            <td class="text-right">{{ number_format($item->unit_price, 2, ',', ' ') }} €</td>
+            <td class="text-right">{{ $item->vat }} %</td>
+            <td class="text-right">{{ number_format($item->total_ht, 2, ',', ' ') }} €</td>
+        </tr>
+    @endforeach
+@else
+    <tr>
+        <td colspan="5" class="text-center p-4">
+            Aucun article n'a été ajouté à ce {{ $document->type == 'quote' ? 'devis' : 'facture' }}.
+        </td>
+    </tr>
+@endif
+
             </tbody>
         </table>
         
