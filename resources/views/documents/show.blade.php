@@ -15,7 +15,7 @@
 <div class="card-custom">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="brand-font">
-            {{ $document->type == 'quote' ? 'Devis' : 'Facture' }} N°{{ str_pad($document->id, 5, '0', STR_PAD_LEFT) }}
+            {{ $document->type == 'quote' ? 'devis' : 'facture' }} N°{{ $document->type == 'quote' ? 'D' : 'F' }}{{ str_pad($document->reference_number, 5, '0', STR_PAD_LEFT) }}
         </h3>
         <div class="btn-group">
             <a href="{{ route('documents.edit', $document->id) }}" class="btn btn-outline-secondary">
