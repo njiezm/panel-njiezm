@@ -100,4 +100,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Team::class);
     }
+
+    public function getSetting($key, $default = null)
+    {
+        return data_get($this->settings, $key, $default);
+    }
 }

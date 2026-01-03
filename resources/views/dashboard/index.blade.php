@@ -46,10 +46,23 @@
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card-custom">
-                <h3 class="brand-font">Activité récente</h3>
-                <div class="activity-timeline">
-                    @foreach($activities as $activity)
+                  <div class="card-custom">
+    <h3 class="brand-font">Activité récente</h3>
+    <div class="activity-timeline">
+        @foreach($activities->take(4) as $activity)
+            <div class="activity-item">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <strong>{{ $activity->title }}</strong>
+                        <p class="text-muted small mb-0">{{ $activity->description }}</p>
+                    </div>
+                    <span class="text-muted small">{{ $activity->created_at->diffForHumans() }}</span>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    @if($activities->count() < 4)
+        @foreach($activities as $activity)
                         <div class="activity-item">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -60,8 +73,10 @@
                             </div>
                         </div>
                     @endforeach
-                </div>
-            </div>
+    @endif
+</div>
+
+      
 
             <div class="card-custom">
                 <h3 class="brand-font">Projets récents</h3>
@@ -118,36 +133,63 @@
                     </div>
                 </div>
             </div>
+            
+            <style>
 
+                .quick-action {
+    background: white;
+    border: 1px solid var(--nj-light);
+    border-radius: 5px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--nj-dark);
+    display: block;
+}
+
+.quick-action:hover {
+    border-color: var(--nj-yellow);
+    transform: translateY(-3px);
+    color: var(--nj-dark);
+    text-decoration: none;
+}
+
+.quick-action i {
+    font-size: 24px;
+    color: var(--nj-blue);
+    margin-bottom: 10px;
+}
+</style>
             <div class="card-custom">
-                <h3 class="brand-font">Actions rapides</h3>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="quick-action">
-                            <i class="fas fa-plus-circle"></i>
-                            <p class="mb-0">Nouveau projet</p>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="quick-action">
-                            <i class="fas fa-file-invoice"></i>
-                            <p class="mb-0">Créer facture</p>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="quick-action">
-                            <i class="fas fa-users"></i>
-                            <p class="mb-0">Inviter membre</p>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="quick-action">
-                            <i class="fas fa-calendar-plus"></i>
-                            <p class="mb-0">Nouvel événement</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <h3 class="brand-font">Actions rapides</h3>
+    <div class="row">
+        <div class="col-6">
+            <a href="{{ route('projects.index') }}" class="quick-action text-decoration-none">
+                <i class="fas fa-plus-circle"></i>
+                <p class="mb-0">Nouveau projet</p>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ route('documents.index') }}" class="quick-action text-decoration-none">
+                <i class="fas fa-file-invoice"></i>
+                <p class="mb-0">Créer facture</p>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ route('team') }}" class="quick-action text-decoration-none">
+                <i class="fas fa-users"></i>
+                <p class="mb-0">Inviter membre</p>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ route('calendar.index') }}" class="quick-action text-decoration-none">
+                <i class="fas fa-calendar-plus"></i>
+                <p class="mb-0">Nouvel événement</p>
+            </a>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </section>

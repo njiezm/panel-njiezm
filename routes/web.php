@@ -12,6 +12,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\LegalController; // Ajoutez cette ligne
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 
 // Page d'accueil (redirection vers le tableau de bord si connecté, sinon vers la page de connexion)
 Route::get('/', function () {
-    return auth()->check() ? redirect('dashboard') : view('welcome');
+    return auth()->check() ? redirect('dashboard') : view('home');
 });
 
 // Routes d'authentification
@@ -173,9 +174,13 @@ Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('
         return view('integrations.index');
     })->name('integrations');
     
-    Route::get('settings', function () {
-        return view('settings.index');
-    })->name('settings');
+   // Routes pour les paramètres
+Route::get('settings', [SettingsController::class, 'index'])->name('settings');
+Route::post('settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update.profile');
+Route::post('settings/password', [SettingsController::class, 'updatePassword'])->name('settings.update.password');
+Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+Route::post('settings/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.update.appearance');
+Route::post('settings/company', [SettingsController::class, 'updateCompany'])->name('settings.update.company');
 
     // Routes pour les générateurs de posts sociaux
     Route::get('instagram-generator', [SocialPostController::class, 'instagramGenerator'])->name('instagram-generator');

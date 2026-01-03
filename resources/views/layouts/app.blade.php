@@ -1014,7 +1014,7 @@
             <p class="small text-uppercase opacity-50 mb-2">Tableau de bord</p>
             <a href="{{ route('dashboard') }}" class="nav-link-custom {{ request()->is('dashboard') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt me-2"></i> Vue d'ensemble
-                <span class="notification-badge">3</span>
+                <!--span class="notification-badge"></!--span-->
             </a>
             
             <p class="small text-uppercase opacity-50 mt-4 mb-2">Visuels</p>
@@ -1119,12 +1119,18 @@
             </a>
             
             @auth
-                <div class="mt-4">
-                    <a href="{{ route('logout') }}" class="nav-link-custom">
-                        <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
-                    </a>
-                </div>
-            @endauth
+    <p class="small text-uppercase opacity-50 mt-4 mb-2">Compte</p>
+    <a href="{{ route('logout') }}"
+       class="nav-link-custom"
+       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+    </a>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+@endauth
+
         </nav>
     </div>
 
