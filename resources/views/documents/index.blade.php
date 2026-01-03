@@ -926,23 +926,66 @@ function toggleDiscountFields(type = 'quote') {
 
 // Mettre à jour les totaux avec réduction
 function updateTotalsWithDiscount(type = 'quote') {
-    const amount = parseFloat(document.getElementById(`${type}Modal #amount`).value) || 0;
+    const rows = document.querySelectorAll(`#${type}-items-container .item-row`);
+    let totalHt = 0;
+    let totalTva = 0;
+    
+    // Calculer le total HT et la TVA par article
+    rows.forEach(row => {
+        const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
+        const unitPrice = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
+        const vat = parseFloat(row.querySelector('input[name*="[vat]"]').value) || 0;
+        
+        const itemHt = quantity * unitPrice;
+        const itemTva = itemHt * (vat / 100);
+        
+        totalHt += itemHt;
+        totalTva += itemTva;
+    });
+    
+    // Mettre à jour le champ du montant total
+    const amountInput = document.querySelector(`#${type}Modal #amount`);
+    if (amountInput) {
+        amountInput.value = totalHt.toFixed(2);
+    }
+    
+    // Appliquer la réduction
     const discountType = document.getElementById(`discount_type${type === 'invoice' ? '_invoice' : ''}`).value;
     const discountAmount = parseFloat(document.getElementById(`discount_amount${type === 'invoice' ? '_invoice' : ''}`).value) || 0;
     const discountPercentage = parseFloat(document.getElementById(`discount_percentage${type === 'invoice' ? '_invoice' : ''}`).value) || 0;
     
     let discountValue = 0;
     if (discountType === 'fixed') {
-        discountValue = Math.min(discountAmount, amount); // Ne pas dépasser le montant total
+        discountValue = Math.min(discountAmount, totalHt); // Ne pas dépasser le montant total
     } else if (discountType === 'percentage') {
-        discountValue = amount * (discountPercentage / 100);
+        discountValue = totalHt * (discountPercentage / 100);
     }
     
-    const totalAfterDiscount = amount - discountValue;
-    const totalTvaAfterDiscount = totalAfterDiscount * 0.2; // Supposant une TVA de 20%
-    const totalTtcAfterDiscount = totalAfterDiscount + totalTvaAfterDiscount;
+    // Calculer les totaux après réduction
+    const totalHtAfterDiscount = totalHt - discountValue;
     
-    document.getElementById(`total_after_discount${type === 'invoice' ? '_invoice' : ''}`).value = totalAfterDiscount.toFixed(2);
+    // Calculer la TVA après réduction en proportionnant la réduction sur chaque article
+    let totalTvaAfterDiscount = 0;
+    rows.forEach(row => {
+        const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
+        const unitPrice = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
+        const vat = parseFloat(row.querySelector('input[name*="[vat]"]').value) || 0;
+        
+        const itemHt = quantity * unitPrice;
+        const itemTva = itemHt * (vat / 100);
+        
+        // Proportionner la réduction sur cet article
+        const itemDiscount = itemHt * (discountValue / totalHt);
+        const itemHtAfterDiscount = itemHt - itemDiscount;
+        
+        // Calculer la TVA sur le montant après réduction
+        totalTvaAfterDiscount += itemHtAfterDiscount * (vat / 100);
+    });
+    
+    const totalTtcAfterDiscount = totalHtAfterDiscount + totalTvaAfterDiscount;
+    
+    // Mettre à jour les champs d'affichage
+    document.getElementById(`total_after_discount${type === 'invoice' ? '_invoice' : ''}`).value = totalHtAfterDiscount.toFixed(2);
     document.getElementById(`total_ttc_after_discount${type === 'invoice' ? '_invoice' : ''}`).value = totalTtcAfterDiscount.toFixed(2);
 }
 
