@@ -135,101 +135,125 @@ class DocumentController extends Controller
                          ->with('success', 'Document créé avec succès.');
     }
 
- public function update(Request $request, Document $document)
+public function update(Request $request, Document $document)
 {
-    try {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'client_name' => 'required|string|max:255',
-            'amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'required|in:none,fixed,percentage',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'discount_percentage' => 'nullable|numeric|min:0|max:100',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after:issue_date',
-            'status' => 'required|in:draft,sent,accepted,refused,paid,overdue',
-            'metadata' => 'nullable|array',
-            'items' => 'required|array|min:1',
-            'items.*.description' => 'required|string',
-            'items.*.quantity' => 'required|numeric|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.vat' => 'required|numeric|min:0|max:100',
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'client_name' => 'required|string|max:255',
+        'discount_type' => 'required|in:none,fixed,percentage',
+        'discount_amount' => 'nullable|numeric|min:0',
+        'discount_percentage' => 'nullable|numeric|min:0|max:100',
+        'issue_date' => 'required|date',
+        'due_date' => 'required|date|after:issue_date',
+        'status' => 'required|in:draft,sent,accepted,refused,paid,overdue',
+        'metadata' => 'nullable|array',
+        'items' => 'required|array|min:1',
+        'items.*.description' => 'required|string',
+        'items.*.quantity' => 'required|numeric|min:1',
+        'items.*.unit_price' => 'required|numeric|min:0',
+        'items.*.vat' => 'required|numeric|min:0|max:100',
+    ]);
+
+    // Validation conditionnelle pour les réductions
+    if ($validated['discount_type'] === 'fixed' && !isset($validated['discount_amount'])) {
+        return back()->withErrors(['discount_amount' => 'Le montant de la réduction est requis pour une réduction fixe.'])->withInput();
+    }
+    if ($validated['discount_type'] === 'percentage' && !isset($validated['discount_percentage'])) {
+        return back()->withErrors(['discount_percentage' => 'Le pourcentage de réduction est requis pour une réduction en pourcentage.'])->withInput();
+    }
+
+    DB::transaction(function () use ($validated, $document) {
+        // Mettre à jour le document (hors montant)
+        $document->update([
+            'title' => $validated['title'],
+            'type' => $validated['type'],
+            'client_name' => $validated['client_name'],
+            'discount_type' => $validated['discount_type'],
+            'discount_amount' => $validated['discount_amount'] ?? 0,
+            'discount_percentage' => $validated['discount_percentage'] ?? 0,
+            'issue_date' => $validated['issue_date'],
+            'due_date' => $validated['due_date'],
+            'status' => $validated['status'],
+            'metadata' => $validated['metadata'] ?? $document->metadata,
         ]);
 
-        // Validation conditionnelle pour les réductions
-        if ($validated['discount_type'] === 'fixed' && !isset($validated['discount_amount'])) {
-            return back()->withErrors(['discount_amount' => 'Le montant de la réduction est requis pour une réduction fixe.'])->withInput();
-        }
-        if ($validated['discount_type'] === 'percentage' && !isset($validated['discount_percentage'])) {
-            return back()->withErrors(['discount_percentage' => 'Le pourcentage de réduction est requis pour une réduction en pourcentage.'])->withInput();
-        }
+        // Supprimer tous les articles existants
+        $document->items()->delete();
 
-        DB::transaction(function () use ($validated, $document) {
-            // Mettre à jour le document (hors montant)
-            $document->update([
-                'title' => $validated['title'],
-                'type' => $validated['type'],
-                'client_name' => $validated['client_name'],
-                'discount_type' => $validated['discount_type'],
-                'discount_amount' => $validated['discount_amount'] ?? 0,
-                'discount_percentage' => $validated['discount_percentage'] ?? 0,
-                'issue_date' => $validated['issue_date'],
-                'due_date' => $validated['due_date'],
-                'status' => $validated['status'],
-                'metadata' => $validated['metadata'] ?? $document->metadata,
+        // Recréer les articles et calculer les totaux
+        $totalHt = 0;
+        $totalTva = 0;
+        $totalTtc = 0;
+        
+        foreach ($validated['items'] as $itemData) {
+            $ht = $itemData['quantity'] * $itemData['unit_price'];
+            $tva = $ht * ($itemData['vat'] / 100);
+            $ttc = $ht + $tva;
+            
+            $totalHt += $ht;
+            $totalTva += $tva;
+            $totalTtc += $ttc;
+
+            Item::create([
+                'document_id' => $document->id,
+                'description' => $itemData['description'],
+                'quantity' => $itemData['quantity'],
+                'unit_price' => $itemData['unit_price'],
+                'vat' => $itemData['vat'],
+                'total_ht' => $ht,
+                'total_tva' => $tva,
+                'total_ttc' => $ttc,
             ]);
+        }
 
-            // Supprimer tous les articles existants
-            $document->items()->delete();
+        // Appliquer la réduction
+        $discount = 0;
+        if ($validated['discount_type'] === 'fixed') {
+            $discount = min($validated['discount_amount'] ?? 0, $totalHt);
+        } elseif ($validated['discount_type'] === 'percentage') {
+            $discount = $totalHt * (($validated['discount_percentage'] ?? 0) / 100);
+        }
 
-            // Recréer les articles et calculer le total HT et TVA
-            $totalHt = 0;
-            $totalTva = 0;
-            foreach ($validated['items'] as $itemData) {
-                $ht = $itemData['quantity'] * $itemData['unit_price'];
-                $tva = $ht * ($itemData['vat'] / 100);
-                $totalHt += $ht;
-                $totalTva += $tva;
-
-                Item::create([
-                    'document_id' => $document->id,
-                    'description' => $itemData['description'],
-                    'quantity' => $itemData['quantity'],
-                    'unit_price' => $itemData['unit_price'],
-                    'vat' => $itemData['vat'],
-                    'total_ht' => $ht,
-                    'total_tva' => $tva,
-                    'total_ttc' => $ht + $tva,
-                ]);
-            }
-
-            // Appliquer réduction uniquement si ce n'est pas 'none'
-            $discount = 0;
-            if ($validated['discount_type'] === 'fixed') {
-                $discount = min($validated['discount_amount'] ?? 0, $totalHt);
-            } elseif ($validated['discount_type'] === 'percentage') {
-                $discount = $totalHt * (($validated['discount_percentage'] ?? 0) / 100);
-            }
-
-            $document->amount = $totalHt - $discount; // total HT après réduction
-            $document->save();
-
-            // Générer le PDF
-            $document->generatePdf();
-        });
-
-        return redirect()->route('documents.index')
-                         ->with('success', 'Document mis à jour avec succès.');
-    } catch (\Exception $e) {
-        // Afficher l'erreur en développement
-        if (config('app.debug')) {
-            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        $totalHtAfterDiscount = $totalHt - $discount;
+        
+        // Calculer la TVA après réduction en proportionnant la réduction sur chaque article
+        $totalTvaAfterDiscount = 0;
+        foreach ($validated['items'] as $itemData) {
+            $ht = $itemData['quantity'] * $itemData['unit_price'];
+            $vat = $itemData['vat'] / 100;
+            
+            // Proportionner la réduction sur cet article
+            $itemDiscount = $ht * ($discount / $totalHt);
+            $itemHtAfterDiscount = $ht - $itemDiscount;
+            
+            // Calculer la TVA sur le montant après réduction
+            $totalTvaAfterDiscount += $itemHtAfterDiscount * $vat;
         }
         
-        // Message d'erreur générique en production
-        return back()->withErrors(['error' => 'Une erreur est survenue lors de la mise à jour du document.'])->withInput();
-    }
+        $totalTtcAfterDiscount = $totalHtAfterDiscount + $totalTvaAfterDiscount;
+        
+        // Mettre à jour le montant du document
+        $document->amount = $totalHtAfterDiscount;
+        $document->save();
+        
+        // Sauvegarder les totaux calculés dans les métadonnées pour affichage
+        $metadata = $document->metadata ?? [];
+        $metadata['total_ht'] = $totalHt;
+        $metadata['total_tva'] = $totalTva;
+        $metadata['total_ttc'] = $totalTtc;
+        $metadata['total_ht_after_discount'] = $totalHtAfterDiscount;
+        $metadata['total_tva_after_discount'] = $totalTvaAfterDiscount;
+        $metadata['total_ttc_after_discount'] = $totalTtcAfterDiscount;
+        $document->metadata = $metadata;
+        $document->save();
+
+        // Générer le PDF
+        $document->generatePdf();
+    });
+
+    return redirect()->route('documents.index')
+                     ->with('success', 'Document mis à jour avec succès.');
 }
 
     

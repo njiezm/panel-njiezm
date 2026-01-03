@@ -111,13 +111,38 @@ class Document extends Model
         });
     }
     
-    /**
-     * Get the total TTC after discount
-     */
-    public function getTotalTtcAfterDiscountAttribute()
-    {
-        return $this->getTotalAfterDiscountAttribute() + $this->getTotalTvaAfterDiscountAttribute();
+   /**
+ * Calcule le total TTC après réduction
+ * @return float
+ */
+public function getTotalTtcAfterDiscountAttribute()
+{
+    $totalHt = $this->items->sum('total_ht');
+    $totalTva = $this->items->sum('total_tva');
+    
+    // Appliquer la réduction
+    $discount = 0;
+    if ($this->discount_type === 'fixed') {
+        $discount = min($this->discount_amount ?? 0, $totalHt);
+    } elseif ($this->discount_type === 'percentage') {
+        $discount = $totalHt * (($this->discount_percentage ?? 0) / 100);
     }
+    
+    $totalHtAfterDiscount = $totalHt - $discount;
+    
+    // Calculer la TVA après réduction en proportionnant la réduction sur chaque article
+    $totalTvaAfterDiscount = 0;
+    foreach ($this->items as $item) {
+        // Proportionner la réduction sur cet article
+        $itemDiscount = $item->total_ht * ($discount / $totalHt);
+        $itemHtAfterDiscount = $item->total_ht - $itemDiscount;
+        
+        // Calculer la TVA sur le montant après réduction
+        $totalTvaAfterDiscount += $itemHtAfterDiscount * ($item->vat / 100);
+    }
+    
+    return $totalHtAfterDiscount + $totalTvaAfterDiscount;
+}
     
     /**
      * Generate PDF for the document
