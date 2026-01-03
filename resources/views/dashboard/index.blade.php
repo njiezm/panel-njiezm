@@ -61,19 +61,7 @@
             </div>
         @endforeach
     </div>
-    @if($activities->count() < 4)
-        @foreach($activities as $activity)
-                        <div class="activity-item">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong>{{ $activity->title }}</strong>
-                                    <p class="text-muted small mb-0">{{ $activity->description }}</p>
-                                </div>
-                                <span class="text-muted small">{{ $activity->created_at->diffForHumans() }}</span>
-                            </div>
-                        </div>
-                    @endforeach
-    @endif
+    
 </div>
 
       
