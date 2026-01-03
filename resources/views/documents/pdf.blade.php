@@ -257,18 +257,27 @@
             </tbody>
         </table>
         
+        @php
+        // Total HT
+        $total_ht = $document->items->sum('total_ht');
+        // Total TVA
+        $total_tva = $document->items->sum('total_tva');
+        // Total TTC
+        $total_ttc = $document->items->sum('total_ttc');
+    @endphp
+    
         <div class="totals">
             <div class="totals-row">
                 <div class="totals-label">Total HT:</div>
-                <div class="totals-value">{{ number_format($document->amount, 2, ',', ' ') }} €</div>
+                <div class="totals-value">{{ number_format($total_ht, 2, ',', ' ') }} €</div>
             </div>
             <div class="totals-row">
-                <div class="totals-label">TVA (20%):</div>
-                <div class="totals-value">{{ number_format($document->amount * 0.2, 2, ',', ' ') }} €</div>
+                <div class="totals-label">TVA ({{ $document->items->first()->vat }}%):</div>
+                <div class="totals-value">{{ number_format($total_tva, 2, ',', ' ') }} €</div>
             </div>
             <div class="totals-row grand-total">
                 <div class="totals-label">Total TTC:</div>
-                <div class="totals-value">{{ number_format($document->amount * 1.2, 2, ',', ' ') }} €</div>
+                <div class="totals-value">{{ number_format($total_ttc, 2, ',', ' ') }} €</div>
             </div>
         </div>
         
