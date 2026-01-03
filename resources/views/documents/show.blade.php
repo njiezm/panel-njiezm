@@ -91,52 +91,86 @@
             </thead>
             <tbody>
                 @if($document->items->count() > 0)
-    @foreach($document->items as $item)
-        <tr>
-            <td>{{ $item->description }}</td>
-            <td class="text-right">{{ $item->quantity }}</td>
-            <td class="text-right">{{ number_format($item->unit_price, 2, ',', ' ') }} €</td>
-            <td class="text-right">{{ $item->vat }} %</td>
-            <td class="text-right">{{ number_format($item->total_ht, 2, ',', ' ') }} €</td>
-        </tr>
-    @endforeach
-@else
-    <tr>
-        <td colspan="5" class="text-center p-4">
-            Aucun article n'a été ajouté à ce {{ $document->type == 'quote' ? 'devis' : 'facture' }}.
-        </td>
-    </tr>
-@endif
-
+                    @foreach($document->items as $item)
+                        <tr>
+                            <td>{{ $item->description }}</td>
+                            <td class="text-right">{{ $item->quantity }}</td>
+                            <td class="text-right">{{ number_format($item->unit_price, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ $item->vat }} %</td>
+                            <td class="text-right">{{ number_format($item->total_ht, 2, ',', ' ') }} €</td>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="5" class="text-center p-4">
+                            Aucun article n'a été ajouté à ce {{ $document->type == 'quote' ? 'devis' : 'facture' }}.
+                        </td>
+                    </tr>
+                @endif
             </tbody>
         </table>
         
-       <div class="totals">
-    @php
-        // Total HT
-        $total_ht = $document->items->sum('total_ht');
-        // Total TVA
-        $total_tva = $document->items->sum('total_tva');
-        // Total TTC
-        $total_ttc = $document->items->sum('total_ttc');
-    @endphp
+        <div class="totals">
+            @php
+                // Total HT
+                $total_ht = $document->items->sum('total_ht');
+                // Total TVA
+                $total_tva = $document->items->sum('total_tva');
+                // Total TTC
+                $total_ttc = $document->items->sum('total_ttc');
+                
+                // Calcul de la réduction
+                $discount_amount = 0;
+                $discount_text = '';
+                
+                if ($document->discount_type === 'fixed') {
+                    $discount_amount = $document->discount_amount;
+                    $discount_text = 'Réduction fixe';
+                } elseif ($document->discount_type === 'percentage') {
+                    $discount_amount = $total_ht * ($document->discount_percentage / 100);
+                    $discount_text = 'Réduction (' . $document->discount_percentage . '%)';
+                }
+                
+                // Total après réduction
+                $total_ht_after_discount = $total_ht - $discount_amount;
+                
+                // Recalculer la TVA et le TTC après réduction
+                $total_tva_after_discount = 0;
+                foreach ($document->items as $item) {
+                    $ratio = $item->total_ht / $total_ht;
+                    $total_tva_after_discount += $item->total_tva * $ratio;
+                }
+                
+                $total_ttc_after_discount = $total_ht_after_discount + $total_tva_after_discount;
+            @endphp
 
-    <div class="totals-row">
-        <div class="totals-label">Total HT:</div>
-        <div class="totals-value">{{ number_format($total_ht, 2, ',', ' ') }} €</div>
-    </div>
+            <div class="totals-row">
+                <div class="totals-label">Total HT:</div>
+                <div class="totals-value">{{ number_format($total_ht, 2, ',', ' ') }} €</div>
+            </div>
 
-    <div class="totals-row">
-        <div class="totals-label">TVA:</div>
-        <div class="totals-value">{{ number_format($total_tva, 2, ',', ' ') }} €</div>
-    </div>
+            @if($document->discount_type !== 'none')
+                <div class="totals-row discount">
+                    <div class="totals-label">{{ $discount_text }}:</div>
+                    <div class="totals-value">-{{ number_format($discount_amount, 2, ',', ' ') }} €</div>
+                </div>
+                
+                <div class="totals-row">
+                    <div class="totals-label">Total HT après réduction:</div>
+                    <div class="totals-value">{{ number_format($total_ht_after_discount, 2, ',', ' ') }} €</div>
+                </div>
+            @endif
 
-    <div class="totals-row grand-total">
-        <div class="totals-label">Total TTC:</div>
-        <div class="totals-value">{{ number_format($total_ttc, 2, ',', ' ') }} €</div>
-    </div>
-</div>
+            <div class="totals-row">
+                <div class="totals-label">TVA:</div>
+                <div class="totals-value">{{ number_format($total_tva_after_discount, 2, ',', ' ') }} €</div>
+            </div>
 
+            <div class="totals-row grand-total">
+                <div class="totals-label">Total TTC:</div>
+                <div class="totals-value">{{ number_format($total_ttc_after_discount, 2, ',', ' ') }} €</div>
+            </div>
+        </div>
         
         @if($document->type == 'invoice')
             <div class="payment-info">
@@ -270,14 +304,22 @@
 }
 
 .totals-label {
-    width: 150px;
+    width: 200px;
     padding-right: 10px;
     text-align: right;
 }
 
 .totals-value {
-    width: 100px;
+    width: 120px;
     text-align: right;
+}
+
+.totals-row.discount .totals-label {
+    color: #e74c3c;
+}
+
+.totals-row.discount .totals-value {
+    color: #e74c3c;
 }
 
 .totals-row.grand-total {
