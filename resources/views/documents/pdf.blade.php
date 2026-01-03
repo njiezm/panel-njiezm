@@ -188,7 +188,7 @@
             </div>
             <div class="document-info">
                 <div class="document-type">{{ $document->type == 'quote' ? 'DEVIS' : 'FACTURE' }}</div>
-                <div class="document-number">N° {{ str_pad($document->id, 5, '0', STR_PAD_LEFT) }}</div>
+                <div class="document-number">N° {{ $document->type == 'quote' ? 'D' : 'F' }}{{ str_pad($document->reference_number, 5, '0', STR_PAD_LEFT) }}</div>
                 <div class="document-date">Date: {{ $document->issue_date->format('d/m/Y') }}</div>
                 @if($document->type == 'invoice')
                     <div class="document-date">Échéance: {{ $document->due_date->format('d/m/Y') }}</div>
@@ -199,8 +199,8 @@
         <div class="document-content">
             <div class="company-info">
                 <div class="section-title">NJIEZM.FR</div>
-                <div class="info-row">123 Rue de la République, 75001 Paris</div>
-                <div class="info-row">+33 1 23 45 67 89</div>
+                <div class="info-row">Le Robert, 97231, Martinique</div>
+                <div class="info-row">+596 696 70 39 22</div>
                 <div class="info-row">contact@njiezm.fr</div>
                 <div class="info-row">SIRET: 12345678901234</div>
                 <div class="info-row">TVA: FR00123456789</div>
