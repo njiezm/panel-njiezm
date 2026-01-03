@@ -72,6 +72,8 @@
                             <th>Date d'émission</th>
                             <th>Date d'échéance</th>
                             <th>Montant</th>
+                            <th>Réduction</th>
+                            <th>Total TTC</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
@@ -85,6 +87,16 @@
                                 <td>{{ $document->issue_date->format('d/m/Y') }}</td>
                                 <td>{{ $document->due_date->format('d/m/Y') }}</td>
                                 <td>{{ number_format($document->amount, 2, ',', ' ') }} €</td>
+                                <td>
+                                    @if($document->discount_type !== 'none')
+                                        <span class="text-danger">
+                                            {{ $document->discount_type === 'fixed' ? number_format($document->discount_amount, 2, ',', ' ') . ' €' : $document->discount_percentage . '%' }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ number_format($document->getTotalTtcAfterDiscountAttribute(), 2, ',', ' ') }} €</td>
                                 <td>
                                     <span class="badge bg-{{ $document->status == 'sent' ? 'primary' : ($document->status == 'accepted' ? 'success' : ($document->status == 'refused' ? 'danger' : 'secondary')) }}">
                                         {{ $document->status == 'draft' ? 'Brouillon' : ($document->status == 'sent' ? 'Envoyé' : ($document->status == 'accepted' ? 'Accepté' : 'Refusé')) }}
@@ -110,7 +122,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="7" class="text-center">Aucun devis trouvé</td>
+                                <td colspan="9" class="text-center">Aucun devis trouvé</td>
                             </tr>
                         @endif
                     </tbody>
@@ -161,6 +173,8 @@
                             <th>Date d'émission</th>
                             <th>Date d'échéance</th>
                             <th>Montant</th>
+                            <th>Réduction</th>
+                            <th>Total TTC</th>
                             <th>Statut</th>
                             <th>Actions</th>
                         </tr>
@@ -174,6 +188,16 @@
                                 <td>{{ $document->issue_date->format('d/m/Y') }}</td>
                                 <td>{{ $document->due_date->format('d/m/Y') }}</td>
                                 <td>{{ number_format($document->amount, 2, ',', ' ') }} €</td>
+                                <td>
+                                    @if($document->discount_type !== 'none')
+                                        <span class="text-danger">
+                                            {{ $document->discount_type === 'fixed' ? number_format($document->discount_amount, 2, ',', ' ') . ' €' : $document->discount_percentage . '%' }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ number_format($document->getTotalTtcAfterDiscountAttribute(), 2, ',', ' ') }} €</td>
                                 <td>
                                     <span class="badge bg-{{ $document->status == 'sent' ? 'primary' : ($document->status == 'paid' ? 'success' : 'danger') }}">
                                         {{ $document->status == 'draft' ? 'Brouillon' : ($document->status == 'sent' ? 'Envoyée' : ($document->status == 'paid' ? 'Payée' : 'En retard')) }}
@@ -199,7 +223,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="7" class="text-center">Aucune facture trouvée</td>
+                                <td colspan="9" class="text-center">Aucune facture trouvée</td>
                             </tr>
                         @endif
                     </tbody>
@@ -351,6 +375,56 @@
                             <i class="fas fa-plus me-2"></i>Ajouter un article
                         </button>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Réduction</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <select class="form-select" id="discount_type" name="discount_type" onchange="toggleDiscountFields()">
+                                            <option value="none">Aucune</option>
+                                            <option value="fixed">Montant fixe</option>
+                                            <option value="percentage">Pourcentage</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4" id="discount_amount_field" style="display: none;">
+                                        <div class="input-group">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control" id="discount_amount" name="discount_amount" step="0.01" min="0" placeholder="Montant">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" id="discount_percentage_field" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" step="0.01" min="0" max="100" placeholder="Pourcentage">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="total_after_discount" class="form-label">Total après réduction HT (€)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="number" class="form-control" id="total_after_discount" name="total_after_discount" step="0.01" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="total_ttc_after_discount" class="form-label">Total TTC après réduction (€)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="number" class="form-control" id="total_ttc_after_discount" name="total_ttc_after_discount" step="0.01" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="mb-3">
                         <label for="file" class="form-label">Fichier (PDF)</label>
@@ -461,6 +535,56 @@
                         <button type="button" class="btn btn-outline-primary mt-2" onclick="addInvoiceItem()">
                             <i class="fas fa-plus me-2"></i>Ajouter un article
                         </button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Réduction</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <select class="form-select" id="discount_type_invoice" name="discount_type" onchange="toggleDiscountFields('invoice')">
+                                            <option value="none">Aucune</option>
+                                            <option value="fixed">Montant fixe</option>
+                                            <option value="percentage">Pourcentage</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4" id="discount_amount_field_invoice" style="display: none;">
+                                        <div class="input-group">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" class="form-control" id="discount_amount_invoice" name="discount_amount" step="0.01" min="0" placeholder="Montant">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" id="discount_percentage_field_invoice" style="display: none;">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discount_percentage_invoice" name="discount_percentage" step="0.01" min="0" max="100" placeholder="Pourcentage">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="total_after_discount_invoice" class="form-label">Total après réduction HT (€)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="number" class="form-control" id="total_after_discount_invoice" name="total_after_discount" step="0.01" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="total_ttc_after_discount_invoice" class="form-label">Total TTC après réduction (€)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">€</span>
+                                    <input type="number" class="form-control" id="total_ttc_after_discount_invoice" name="total_ttc_after_discount" step="0.01" readonly>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -619,8 +743,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ajouter les attributs data pour le filtrage
     document.querySelectorAll('#quotes-table-body tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        if (cells.length >= 6) {
-            row.dataset.status = cells[5].textContent.trim().toLowerCase();
+        if (cells.length >= 8) {
+            row.dataset.status = cells[7].textContent.trim().toLowerCase();
             row.dataset.client = cells[1].textContent.toLowerCase();
             row.dataset.date = cells[3].textContent;
         }
@@ -628,8 +752,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelectorAll('#invoices-table-body tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        if (cells.length >= 6) {
-            row.dataset.status = cells[5].textContent.trim().toLowerCase();
+        if (cells.length >= 8) {
+            row.dataset.status = cells[7].textContent.trim().toLowerCase();
             row.dataset.client = cells[1].textContent.toLowerCase();
             row.dataset.date = cells[3].textContent;
         }
@@ -706,6 +830,9 @@ function updateQuoteTotalAmount() {
     if (amountInput) {
         amountInput.value = total.toFixed(2);
     }
+    
+    // Mettre à jour les totaux avec réduction
+    updateTotalsWithDiscount('quote');
 }
 
 // Ajouter un article à la facture
@@ -774,6 +901,49 @@ function updateInvoiceTotalAmount() {
     if (amountInput) {
         amountInput.value = total.toFixed(2);
     }
+    
+    // Mettre à jour les totaux avec réduction
+    updateTotalsWithDiscount('invoice');
+}
+
+// Fonction pour afficher/masquer les champs de réduction
+function toggleDiscountFields(type = 'quote') {
+    const discountType = document.getElementById(`discount_type${type === 'invoice' ? '_invoice' : ''}`).value;
+    const discountAmountField = document.getElementById(`discount_amount_field${type === 'invoice' ? '_invoice' : ''}`);
+    const discountPercentageField = document.getElementById(`discount_percentage_field${type === 'invoice' ? '_invoice' : ''}`);
+    
+    discountAmountField.style.display = 'none';
+    discountPercentageField.style.display = 'none';
+    
+    if (discountType === 'fixed') {
+        discountAmountField.style.display = 'block';
+    } else if (discountType === 'percentage') {
+        discountPercentageField.style.display = 'block';
+    }
+    
+    updateTotalsWithDiscount(type);
+}
+
+// Mettre à jour les totaux avec réduction
+function updateTotalsWithDiscount(type = 'quote') {
+    const amount = parseFloat(document.getElementById(`${type}Modal #amount`).value) || 0;
+    const discountType = document.getElementById(`discount_type${type === 'invoice' ? '_invoice' : ''}`).value;
+    const discountAmount = parseFloat(document.getElementById(`discount_amount${type === 'invoice' ? '_invoice' : ''}`).value) || 0;
+    const discountPercentage = parseFloat(document.getElementById(`discount_percentage${type === 'invoice' ? '_invoice' : ''}`).value) || 0;
+    
+    let discountValue = 0;
+    if (discountType === 'fixed') {
+        discountValue = Math.min(discountAmount, amount); // Ne pas dépasser le montant total
+    } else if (discountType === 'percentage') {
+        discountValue = amount * (discountPercentage / 100);
+    }
+    
+    const totalAfterDiscount = amount - discountValue;
+    const totalTvaAfterDiscount = totalAfterDiscount * 0.2; // Supposant une TVA de 20%
+    const totalTtcAfterDiscount = totalAfterDiscount + totalTvaAfterDiscount;
+    
+    document.getElementById(`total_after_discount${type === 'invoice' ? '_invoice' : ''}`).value = totalAfterDiscount.toFixed(2);
+    document.getElementById(`total_ttc_after_discount${type === 'invoice' ? '_invoice' : ''}`).value = totalTtcAfterDiscount.toFixed(2);
 }
 
 // Initialiser les écouteurs d'événements
@@ -793,6 +963,14 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('input', updateInvoiceTotalAmount);
         });
     });
+    
+    // Écouteurs pour les champs de réduction du devis
+    document.getElementById('discount_amount').addEventListener('input', () => updateTotalsWithDiscount('quote'));
+    document.getElementById('discount_percentage').addEventListener('input', () => updateTotalsWithDiscount('quote'));
+    
+    // Écouteurs pour les champs de réduction de la facture
+    document.getElementById('discount_amount_invoice').addEventListener('input', () => updateTotalsWithDiscount('invoice'));
+    document.getElementById('discount_percentage_invoice').addEventListener('input', () => updateTotalsWithDiscount('invoice'));
 });
 </script>
 @endsection

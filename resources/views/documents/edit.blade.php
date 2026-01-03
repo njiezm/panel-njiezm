@@ -14,17 +14,25 @@
 
 <div class="card-custom">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <!--h3 class="brand-font">
-            Modifier le {{ $document->type == 'quote' ? 'devis' : 'facture' }} N°{{ str_pad($document->id, 5, '0', STR_PAD_LEFT) }}
-        </!--h3-->
         <h3 class="brand-font">
-    Modifier le {{ $document->type == 'quote' ? 'devis' : 'facture' }} N°{{ $document->type == 'quote' ? 'D' : 'F' }}{{ str_pad($document->reference_number, 5, '0', STR_PAD_LEFT) }}
-</h3>
+            Modifier le {{ $document->type == 'quote' ? 'devis' : 'facture' }} N°{{ $document->type == 'quote' ? 'D' : 'F' }}{{ str_pad($document->reference_number, 5, '0', STR_PAD_LEFT) }}
+        </h3>
     </div>
     
     <form action="{{ route('documents.update', $document->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+<input type="hidden" name="type" value="{{ $document->type }}">
+         <!-- Afficher les erreurs -->
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
         
         <div class="row">
             <div class="col-md-6">
@@ -59,11 +67,12 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="amount" class="form-label">Montant total (€)</label>
+                    <label for="amount" class="form-label">Montant total HT (€)</label>
                     <div class="input-group">
                         <span class="input-group-text">€</span>
-                        <input type="number" class="form-control" id="amount" name="amount" value="{{ $document->amount }}" step="0.01" required>
+                        <input type="number" class="form-control" id="amount" name="amount" value="{{ $document->amount }}" step="0.01" readonly>
                     </div>
+                    <div class="form-text">Le montant sera calculé automatiquement à partir des articles</div>
                 </div>
             </div>
             <div class="col-md-6">
@@ -120,6 +129,56 @@
             <button type="button" class="btn btn-outline-primary mt-2" onclick="addItem()">
                 <i class="fas fa-plus me-2"></i>Ajouter un article
             </button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <label class="form-label">Réduction</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select class="form-select" id="discount_type" name="discount_type" onchange="toggleDiscountFields()">
+                                <option value="none" {{ $document->discount_type === 'none' ? 'selected' : '' }}>Aucune</option>
+                                <option value="fixed" {{ $document->discount_type === 'fixed' ? 'selected' : '' }}>Montant fixe</option>
+                                <option value="percentage" {{ $document->discount_type === 'percentage' ? 'selected' : '' }}>Pourcentage</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="discount_amount_field" style="display: {{ $document->discount_type === 'fixed' ? 'block' : 'none' }};">
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" class="form-control" id="discount_amount" name="discount_amount" value="{{ $document->discount_amount ?? 0 }}" step="0.01" min="0" placeholder="Montant">
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="discount_percentage_field" style="display: {{ $document->discount_type === 'percentage' ? 'block' : 'none' }};">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" value="{{ $document->discount_percentage ?? 0 }}" step="0.01" min="0" max="100" placeholder="Pourcentage">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="total_after_discount" class="form-label">Total après réduction HT (€)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        <input type="number" class="form-control" id="total_after_discount" name="total_after_discount" value="{{ number_format($document->getTotalAfterDiscountAttribute(), 2, '.', '') }}" step="0.01" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="total_ttc_after_discount" class="form-label">Total TTC après réduction (€)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        <input type="number" class="form-control" id="total_ttc_after_discount" name="total_ttc_after_discount" value="{{ number_format($document->getTotalTtcAfterDiscountAttribute(), 2, '.', '') }}" step="0.01" readonly>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="mb-3">
@@ -205,17 +264,63 @@ function updateTotalAmount() {
     const rows = document.querySelectorAll('.item-row');
     let total = 0;
     
-    rows.forEach(row => {
-        const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
-        const unitPrice = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
-        total += quantity * unitPrice;
-    });
+   rows.forEach(row => {
+    const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
+    const unitPrice = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
+    const vat = parseFloat(row.querySelector('input[name*="[vat]"]').value) || 0;
+
+    total += quantity * unitPrice; // total HT
+});
+
     
     // Mettre à jour le champ du montant total
     const amountInput = document.getElementById('amount');
     if (amountInput) {
         amountInput.value = total.toFixed(2);
     }
+    
+    // Mettre à jour les totaux avec réduction
+    updateTotalsWithDiscount();
+}
+
+// Fonction pour afficher/masquer les champs de réduction
+function toggleDiscountFields() {
+    const discountType = document.getElementById('discount_type').value;
+    const discountAmountField = document.getElementById('discount_amount_field');
+    const discountPercentageField = document.getElementById('discount_percentage_field');
+    
+    discountAmountField.style.display = 'none';
+    discountPercentageField.style.display = 'none';
+    
+    if (discountType === 'fixed') {
+        discountAmountField.style.display = 'block';
+    } else if (discountType === 'percentage') {
+        discountPercentageField.style.display = 'block';
+    }
+    
+    updateTotalsWithDiscount();
+}
+
+// Mettre à jour les totaux avec réduction
+function updateTotalsWithDiscount() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const discountType = document.getElementById('discount_type').value;
+    const discountAmount = parseFloat(document.getElementById('discount_amount').value) || 0;
+    const discountPercentage = parseFloat(document.getElementById('discount_percentage').value) || 0;
+    
+    let discountValue = 0;
+    if (discountType === 'fixed') {
+        discountValue = Math.min(discountAmount, amount); // Ne pas dépasser le montant total
+    } else if (discountType === 'percentage') {
+        discountValue = amount * (discountPercentage / 100);
+    }
+    
+    const totalAfterDiscount = amount - discountValue;
+    const totalTvaAfterDiscount = totalAfterDiscount * 0.2; // Supposant une TVA de 20%
+    const totalTtcAfterDiscount = totalAfterDiscount + totalTvaAfterDiscount;
+    
+    document.getElementById('total_after_discount').value = totalAfterDiscount.toFixed(2);
+    document.getElementById('total_ttc_after_discount').value = totalTtcAfterDiscount.toFixed(2);
 }
 
 // Initialiser les écouteurs d'événements
@@ -227,6 +332,13 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('input', updateTotalAmount);
         });
     });
+    
+    // Écouteurs pour les champs de réduction
+    document.getElementById('discount_amount').addEventListener('input', updateTotalsWithDiscount);
+    document.getElementById('discount_percentage').addEventListener('input', updateTotalsWithDiscount);
+    
+    // Initialiser l'affichage des champs de réduction
+    toggleDiscountFields();
 });
 </script>
 @endsection

@@ -158,6 +158,10 @@
             margin-top: 5px;
         }
 
+        .discount-row {
+            color: var(--nj-danger);
+        }
+
         .payment-info {
             margin-bottom: 15px;
             font-size: 11px;
@@ -258,26 +262,53 @@
         </table>
         
         @php
-        // Total HT
+        // Calcul des totaux avec prise en compte des réductions
         $total_ht = $document->items->sum('total_ht');
-        // Total TVA
         $total_tva = $document->items->sum('total_tva');
-        // Total TTC
         $total_ttc = $document->items->sum('total_ttc');
+        
+        // Calcul de la réduction
+        $discount_amount = 0;
+        if ($document->discount_type === 'fixed') {
+            $discount_amount = $document->discount_amount;
+        } elseif ($document->discount_type === 'percentage') {
+            $discount_amount = $total_ht * ($document->discount_percentage / 100);
+        }
+        
+        // Totaux après réduction
+        $total_ht_after_discount = $total_ht - $discount_amount;
+        $total_tva_after_discount = $total_tva * ($total_ht_after_discount / $total_ht);
+        $total_ttc_after_discount = $total_ht_after_discount + $total_tva_after_discount;
     @endphp
-    
+        
         <div class="totals">
             <div class="totals-row">
                 <div class="totals-label">Total HT:</div>
                 <div class="totals-value">{{ number_format($total_ht, 2, ',', ' ') }} €</div>
             </div>
+            
+            @if($document->discount_type !== 'none')
+                <div class="totals-row discount-row">
+                    <div class="totals-label">
+                        Réduction ({{ $document->discount_type === 'fixed' ? 'Fixe' : $document->discount_percentage . '%' }}):
+                    </div>
+                    <div class="totals-value">-{{ number_format($discount_amount, 2, ',', ' ') }} €</div>
+                </div>
+            @endif
+            
             <div class="totals-row">
-                <div class="totals-label">TVA ({{ $document->items->first()->vat }}%):</div>
-                <div class="totals-value">{{ number_format($total_tva, 2, ',', ' ') }} €</div>
+                <div class="totals-label">Total HT après réduction:</div>
+                <div class="totals-value">{{ number_format($total_ht_after_discount, 2, ',', ' ') }} €</div>
             </div>
+            
+            <div class="totals-row">
+                <div class="totals-label">TVA:</div>
+                <div class="totals-value">{{ number_format($total_tva_after_discount, 2, ',', ' ') }} €</div>
+            </div>
+            
             <div class="totals-row grand-total">
                 <div class="totals-label">Total TTC:</div>
-                <div class="totals-value">{{ number_format($total_ttc, 2, ',', ' ') }} €</div>
+                <div class="totals-value">{{ number_format($total_ttc_after_discount, 2, ',', ' ') }} €</div>
             </div>
         </div>
         

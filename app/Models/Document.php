@@ -10,17 +10,15 @@ class Document extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
+     protected $fillable = [
         'reference_number',
         'title',
         'type',
         'client_name',
         'amount',
+        'discount_amount',
+        'discount_percentage',
+        'discount_type',
         'issue_date',
         'due_date',
         'status',
@@ -36,6 +34,8 @@ class Document extends Model
      */
     protected $casts = [
         'amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
         'issue_date' => 'date',
         'due_date' => 'date',
         'metadata' => 'array',
@@ -75,6 +75,50 @@ class Document extends Model
     }
     
    
+   
+    
+    /**
+     * Calculate the discount amount based on discount type
+     */
+    public function calculateDiscountAmount()
+    {
+        if ($this->discount_type === 'fixed') {
+            return $this->discount_amount;
+        } elseif ($this->discount_type === 'percentage') {
+            return $this->amount * ($this->discount_percentage / 100);
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Get the total amount after discount
+     */
+    public function getTotalAfterDiscountAttribute()
+    {
+        return $this->amount - $this->calculateDiscountAmount();
+    }
+    
+    /**
+     * Get the total TVA after discount
+     */
+    public function getTotalTvaAfterDiscountAttribute()
+    {
+        $totalAfterDiscount = $this->getTotalAfterDiscountAttribute();
+        return $this->items->sum(function ($item) use ($totalAfterDiscount) {
+            $itemRatio = $item->total_ht / $this->amount;
+            return $item->total_tva * $itemRatio * ($totalAfterDiscount / $this->amount);
+        });
+    }
+    
+    /**
+     * Get the total TTC after discount
+     */
+    public function getTotalTtcAfterDiscountAttribute()
+    {
+        return $this->getTotalAfterDiscountAttribute() + $this->getTotalTvaAfterDiscountAttribute();
+    }
+    
     /**
      * Generate PDF for the document
      */
@@ -128,4 +172,5 @@ class Document extends Model
         
         return $filePath;
     }
+
 }
