@@ -74,22 +74,7 @@ class Document extends Model
         $this->save();
     }
     
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        
-        // Observer pour régénérer le PDF lorsque le document est modifié
-        static::updated(function ($document) {
-            // Vérifier si les champs importants ont été modifiés
-            if ($document->wasChanged(['title', 'client_name', 'amount', 'issue_date', 'due_date', 'status', 'metadata'])) {
-                $document->generatePdf();
-            }
-        });
-    }
-    
+   
     /**
      * Generate PDF for the document
      */

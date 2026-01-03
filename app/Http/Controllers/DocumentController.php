@@ -66,7 +66,9 @@ class DocumentController extends Controller
         // Utiliser une transaction pour s'assurer que tout est sauvegardé correctement
         DB::transaction(function () use ($validated, $request) {
             // Générer le numéro de référence
-            $referenceNumber = Document::where('type', $validated['type'])->max('reference_number') + 1;
+            $referenceNumber = (Document::where('type', $validated['type'])
+    ->max('reference_number') ?? 0) + 1;
+
             
             // Créer le document
             $document = Document::create([
@@ -205,7 +207,7 @@ class DocumentController extends Controller
         // Utiliser une transaction pour s'assurer que tout est sauvegardé correctement
         $document = DB::transaction(function () use ($template, $type) {
             // Générer le numéro de référence
-            $referenceNumber = Document::where('type', $type)->max('reference_number') + 1;
+            $referenceNumber = (Document::where('type', $type)->max('reference_number') ?? 0) + 1;
             
             // Créer le document
             $document = Document::create([
