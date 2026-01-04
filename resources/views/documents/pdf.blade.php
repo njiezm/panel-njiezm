@@ -206,8 +206,8 @@
                 <div class="info-row">Le Robert, 97231, Martinique</div>
                 <div class="info-row">+596 696 70 39 22</div>
                 <div class="info-row">contact@njiezm.fr</div>
-                <div class="info-row">SIRET: 12345678901234</div>
-                <div class="info-row">TVA: FR00123456789</div>
+                <div class="info-row">SIRET: En cours d\'attribution</div>
+                <div class="info-row">TVA: TVA non applicable, art. 293B du CGI</div>
             </div>
             
             <div class="client-info">

@@ -161,8 +161,8 @@ public function getTotalTtcAfterDiscountAttribute()
                 'address' => '123 Rue de la République, 75001 Paris',
                 'phone' => '+33 1 23 45 67 89',
                 'email' => 'contact@njiezm.fr',
-                'siret' => '12345678901234',
-                'tva' => 'FR00123456789'
+                'siret' => 'En cours d\'attribution',
+                'tva' => 'TVA non applicable, art. 293B du CGI'
             ]
         ];
         

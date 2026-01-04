@@ -991,10 +991,61 @@
     justify-content: center;
     flex-direction: column;
 }
+
+/* Pour les écrans mobiles */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px !important; /* S'assurer que la largeur est conservée */
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+        z-index: 1050; /* Assurer que la sidebar est au-dessus du contenu */
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 20px; /* Réduire le padding pour mobile */
+    }
+
+    .sidebar-toggle {
+        position: fixed; /* Changement de absolute à fixed */
+        left: 20px; /* Déplacer à gauche au lieu de droite */
+        right: auto;
+        top: 20px;
+        z-index: 1002; /* Augmenter le z-index */
+    }
+
+    /* Ajouter un overlay pour fermer la sidebar quand on clique à l'extérieur */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* Ajustements pour le bouton de mode sombre */
+    .dark-mode-toggle {
+        top: 20px;
+        right: 20px;
+        z-index: 1003; /* S'assurer qu'il est au-dessus de la sidebar */
+    }
+}
     </style>
     @stack('styles')
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <button class="dark-mode-toggle" onclick="toggleDarkMode()">
         <i class="fas fa-moon"></i>
     </button>
@@ -1186,15 +1237,27 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Toggle sidebar
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
+       // Toggle sidebar
+// Toggle sidebar (uniquement pour desktop)
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    
+    // Uniquement pour les écrans de bureau
+    if (window.innerWidth > 768) {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+    }
+}
 
+// Ajouter cette fonction pour fermer la sidebar quand on clique sur l'overlay
+document.getElementById('sidebar-overlay').addEventListener('click', function() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+});
         // Toggle dark mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
