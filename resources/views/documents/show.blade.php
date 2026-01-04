@@ -55,7 +55,7 @@
                 <div class="info-row">123 Rue de la République, 75001 Paris</div>
                 <div class="info-row">+33 1 23 45 67 89</div>
                 <div class="info-row">contact@njiezm.fr</div>
-                <div class="info-row">SIRET: En cours d\'attribution</div>
+                <div class="info-row">SIRET: En cours d'attribution</div>
                 <div class="info-row">TVA: TVA non applicable, art. 293B du CGI</div>
             </div>
             
