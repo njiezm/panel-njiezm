@@ -251,7 +251,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="companySiret" class="form-label">SIRET</label>
-                        <input type="text" class="form-control" id="companySiret" name="companySiret" value="{{ $user->getSetting('company.siret', 'En cours d\'attribution') }}">
+                        <input type="text" class="form-control" id="companySiret" name="companySiret" value="{{ $user->getSetting('company.siret', '99939612000019') }}">
                     </div>
                 </div>
                 <div class="mb-3">
