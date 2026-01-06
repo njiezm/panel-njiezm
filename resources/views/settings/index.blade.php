@@ -256,12 +256,12 @@
                 </div>
                 <div class="mb-3">
                     <label for="companyAddress" class="form-label">Adresse</label>
-                    <input type="text" class="form-control" id="companyAddress" name="companyAddress" value="{{ $user->getSetting('company.address', '123 Rue de la République, 75001 Paris') }}">
+                    <input type="text" class="form-control" id="companyAddress" name="companyAddress" value="{{ $user->getSetting('company.address', 'Le Robert, Martinique') }}">
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="companyPhone" class="form-label">Téléphone</label>
-                        <input type="tel" class="form-control" id="companyPhone" name="companyPhone" value="{{ $user->getSetting('company.phone', '+33 1 23 45 67 89') }}">
+                        <input type="tel" class="form-control" id="companyPhone" name="companyPhone" value="{{ $user->getSetting('company.phone', '+596 696 70 39 22') }}">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="companyEmail" class="form-label">Email</label>

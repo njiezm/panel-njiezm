@@ -52,8 +52,8 @@
         <div class="document-content">
             <div class="company-info">
                 <div class="section-title">NJIEZM.FR</div>
-                <div class="info-row">123 Rue de la République, 75001 Paris</div>
-                <div class="info-row">+33 1 23 45 67 89</div>
+                <div class="info-row">Le Robert, Martinique</div>
+                <div class="info-row">+596 696 70 39 22</div>
                 <div class="info-row">contact@njiezm.fr</div>
                 <div class="info-row">SIRET: 99939612000019</div>
                 <div class="info-row">TVA: TVA non applicable, art. 293B du CGI</div>

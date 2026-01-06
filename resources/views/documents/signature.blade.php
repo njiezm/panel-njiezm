@@ -163,7 +163,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Téléphone</label>
-                        <input type="text" class="form-control" id="email-phone" placeholder="+33 1 23 45 67 89">
+                        <input type="text" class="form-control" id="email-phone" placeholder="+596 696 70 39 22">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
@@ -203,7 +203,7 @@
                                 <div class="email-signature-name" id="email-signature-name-preview">Votre nom</div>
                                 <div class="email-signature-title" id="email-signature-title-preview">Votre titre ou poste</div>
                                 <div class="email-signature-contact">
-                                    <div class="email-signature-phone" id="email-signature-phone-preview">+33 1 23 45 67 89</div>
+                                    <div class="email-signature-phone" id="email-signature-phone-preview">+596 696 70 39 22</div>
                                     <div class="email-signature-email" id="email-signature-email-preview">votre.email@njiezm.fr</div>
                                     <div class="email-signature-website" id="email-signature-website-preview">www.njiezm.fr</div>
                                 </div>
@@ -618,7 +618,7 @@ function generateEmailSignature() {
     const name = document.getElementById('email-name').value || 'Votre nom';
     const title = document.getElementById('email-title').value || 'Votre titre';
     const company = document.getElementById('email-company').value || 'NJIEZM.FR';
-    const phone = document.getElementById('email-phone').value || '+33 1 23 45 67 89';
+    const phone = document.getElementById('email-phone').value || '+596 696 70 39 22';
     const email = document.getElementById('email-email').value || 'votre.email@njiezm.fr';
     const website = document.getElementById('email-website').value || 'www.njiezm.fr';
     const customText = document.getElementById('email-custom-text').value;

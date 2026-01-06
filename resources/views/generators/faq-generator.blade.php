@@ -380,7 +380,7 @@
                             <i class="fas fa-chevron-down"></i>
                         </div>
                         <div class="answer">
-                            <p>Vous pouvez nous contacter par email à support@njiezm.fr, via notre chat en direct disponible 24/7, ou par téléphone au 01 23 45 67 89 du lundi au vendredi de 9h à 18h.</p>
+                            <p>Vous pouvez nous contacter par email à support@njiezm.fr, via notre chat en direct disponible 24/7, ou par téléphone au +596 696 70 39 22 du lundi au vendredi de 9h à 18h.</p>
                         </div>
                     </div>
                     

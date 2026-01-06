@@ -158,8 +158,8 @@ public function getTotalTtcAfterDiscountAttribute()
             'document' => $this,
             'company' => [
                 'name' => 'NJIEZM.FR',
-                'address' => '123 Rue de la République, 75001 Paris',
-                'phone' => '+33 1 23 45 67 89',
+                'address' => 'Le Robert, Martinique',
+                'phone' => '+596 696 70 39 22',
                 'email' => 'contact@njiezm.fr',
                 'siret' => '99939612000019',
                 'tva' => 'TVA non applicable, art. 293B du CGI'
